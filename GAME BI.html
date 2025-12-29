@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Listening Peribahasa - MI NU HIDAYATUL MUBTADIIN</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f3f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h1, h2 { text-align: center; color: var(--primary); }
+        .hidden { display: none !important; }
+
+        /* Login Style */
+        .login-box {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        /* Audio Controls */
+        .audio-nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        .slider-container {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Word Bank */
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .word-item {
+            padding: 8px 15px;
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .word-item:hover { background: var(--accent); color: white; }
+
+        /* Cloze Text */
+        .cloze-container {
+            line-height: 2;
+            font-size: 18px;
+        }
+
+        .blank {
+            display: inline-block;
+            min-width: 80px;
+            border-bottom: 2px solid var(--primary);
+            text-align: center;
+            color: #d35400;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        /* Result Card */
+        .result-card {
+            text-align: center;
+            padding: 40px;
+            background: #fff;
+            border: 3px solid var(--accent);
+            border-radius: 20px;
+        }
+
+        .score-big {
+            font-size: 72px;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        .info-text { font-size: 18px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 1. LOGIN SCREEN -->
+        <div id="login-screen">
+            <h1>Game Peribahasa</h1>
+            <p style="text-align: center;">MI NU HIDAYATUL MUBTADIIN - KELAS 6A</p>
+            <div class="login-box">
+                <input type="text" id="name" placeholder="Nama Lengkap" required>
+                <input type="text" id="class" value="6A" readonly>
+                <input type="number" id="absen" placeholder="Nomor Absen" required>
+                <button onclick="startIntro()">MULAI</button>
+            </div>
+        </div>
+
+        <!-- 2. GAME SCREEN -->
+        <div id="game-screen" class="hidden">
+            <h2 id="student-header"></h2>
+            
+            <div class="audio-nav">
+                <p>Klik tombol PLAY untuk mendengarkan peribahasa:</p>
+                <button onclick="playAudio()">▶ PLAY</button>
+                <button onclick="pauseAudio()" style="background: #e74c3c;">⏸ PAUSE</button>
+                <div class="slider-container">
+                    <label>Kecepatan:</label>
+                    <input type="range" id="speed" min="0.5" max="1.5" step="0.1" value="1">
+                    <span id="speed-val">1x</span>
+                </div>
+            </div>
+
+            <p><strong>Pilih kata untuk mengisi titik-titik (klik kotak kata):</strong></p>
+            <div id="word-bank" class="word-bank"></div>
+
+            <div class="cloze-container" id="quiz-container">
+                <!-- Quiz items will be injected here -->
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showResult()" style="background: #2980b9; padding: 15px 40px; font-size: 18px;">SELESAI & LIHAT SKOR</button>
+            </div>
+        </div>
+
+        <!-- 3. RESULT SCREEN -->
+        <div id="result-screen" class="hidden">
+            <div class="result-card">
+                <h2>HASIL AKHIR</h2>
+                <div id="student-info-final" class="info-text"></div>
+                <div class="score-big" id="final-score">0</div>
+                <div class="info-text">Semoga Bermanfaat!</div>
+                <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="location.reload()">ULANGI</button>
+                    <button onclick="alert('Terima kasih sudah belajar!')" style="background: #34495e;">SELESAI</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const proverbsText = "Air beriak tanda tak dalam. Bagai air di daun talas. Berat sama dipikul ringan sama dijinjing. Bagai pinang dibelah dua. Sedikit demi sedikit, lama-lama menjadi bukit. Katak dalam tempurung. Sekali merengkuh dayung, dua tiga pulau terlampaui. Nasi sudah menjadi bubur. Rajin pangkal pandai, hemat pangkal kaya. Tak ada rotan, akar pun jadi. Ada udang di balik batu. Besar pasak daripada tiang. Bagaikan api dalam sekam. Buah jatuh tidak jauh dari pohonnya. Tong kosong nyaring bunyinya. Bagai mencari jarum dalam jerami. Malu bertanya sesat di jalan. Sambil menyelam minum air. Sepandai-pandai tupai melompat, akhirnya jatuh juga. Habis gelap terbitlah terang.";
+        
+        const introText = "SELAMAT BELAJAR PERIBAHASA, DI DESAIN OLEH BAPAK MOHAMMAD ARWANI, SARJANA PENDIDIKAN ISLAM, YANG DIDESAIN KHUSUS UNTUK SISWA KELAS 6A, MI NU HIDAYATUL MUBTADIIN, UNDAAN KIDUL, UNTUK MENGISI LIBURAN SEKOLAH, SEMOGA BERMANFAAT";
+
+        const answers = [
+            "dalam", "talas", "dipikul", "pinang", "bukit", 
+            "katak", "pulau", "bubur", "kaya", "akar",
+            "batu", "tiang", "sekam", "pohonnya", "tong kosong",
+            "jerami", "jalan", "air", "tupai", "terang"
+        ];
+
+        const quizSentences = [
+            "1. Air beriak tanda tak [0].",
+            "2. Bagai air di daun [1].",
+            "3. Berat sama [2], ringan sama dijinjing.",
+            "4. Bagai [3] dibelah dua.",
+            "5. Sedikit demi sedikit, lama-lama menjadi [4].",
+            "6. Bagai [5] dalam tempurung.",
+            "7. Sekali merengkuh dayung, dua tiga [6] terlampaui.",
+            "8. Nasi sudah menjadi [7].",
+            "9. Rajin pangkal pandai, hemat pangkal [8].",
+            "10. Tak ada rotan, [9] pun jadi.",
+            "11. Ada udang di balik [10].",
+            "12. Besar pasak daripada [11].",
+            "13. Bagaikan api dalam [12].",
+            "14. Buah jatuh tidak jauh dari [13].",
+            "15. [14] nyaring bunyinya.",
+            "16. Bagai mencari jarum dalam [15].",
+            "17. Malu bertanya sesat di [16].",
+            "18. Sambil menyelam minum [17].",
+            "19. Sepandai-pandai [18] melompat.",
+            "20. Habis gelap terbitlah [19]."
+        ];
+
+        let synth = window.speechSynthesis;
+        let utterance = new SpeechSynthesisUtterance();
+        let currentTargetIndex = 0;
+        let studentAnswers = new Array(20).fill("");
+
+        // Setup voices
+        function getIndonesianVoice() {
+            return synth.getVoices().find(v => v.lang.includes('id-ID')) || synth.getVoices()[0];
+        }
+
+        function speak(text) {
+            synth.cancel();
+            utterance.text = text;
+            utterance.voice = getIndonesianVoice();
+            utterance.rate = document.getElementById('speed').value;
+            synth.speak(utterance);
+        }
+
+        function startIntro() {
+            const name = document.getElementById('name').value;
+            const absen = document.getElementById('absen').value;
+
+            if(!name || !absen) {
+                alert("Silakan isi nama dan nomor absen!");
+                return;
+            }
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('student-header').innerText = `Halo, ${name} (Absen: ${absen})`;
+            
+            initQuiz();
+            speak(introText);
+        }
+
+        function playAudio() {
+            speak(proverbsText);
+        }
+
+        function pauseAudio() {
+            synth.pause();
+        }
+
+        // Handle speed slider
+        document.getElementById('speed').oninput = function() {
+            document.getElementById('speed-val').innerText = this.value + 'x';
+            if (synth.speaking) playAudio();
+        };
+
+        function initQuiz() {
+            // Setup Word Bank
+            const bankDiv = document.getElementById('word-bank');
+            const shuffledWords = [...answers].sort(() => Math.random() - 0.5);
+            
+            shuffledWords.forEach(word => {
+                const div = document.createElement('div');
+                div.className = 'word-item';
+                div.innerText = word;
+                div.onclick = () => fillBlank(word);
+                bankDiv.appendChild(div);
+            });
+
+            // Setup Quiz Text
+            const quizDiv = document.getElementById('quiz-container');
+            quizSentences.forEach((sentence, index) => {
+                const p = document.createElement('p');
+                const html = sentence.replace(`[${index}]`, `<span class="blank" id="blank-${index}" onclick="setCurrent(${index})">.......</span>`);
+                p.innerHTML = html;
+                quizDiv.appendChild(p);
+            });
+        }
+
+        function setCurrent(index) {
+            currentTargetIndex = index;
+            // Visual feedback
+            document.querySelectorAll('.blank').forEach(b => b.style.borderColor = '#2c3e50');
+            document.getElementById(`blank-${index}`).style.borderColor = '#e67e22';
+        }
+
+        function fillBlank(word) {
+            // Fill the first empty blank or the one selected
+            let target = currentTargetIndex;
+            
+            // If current is already filled, find next empty
+            if(studentAnswers[target] !== "") {
+                target = studentAnswers.findIndex(a => a === "");
+                if(target === -1) target = currentTargetIndex; // stay if all full
+            }
+
+            studentAnswers[target] = word;
+            const element = document.getElementById(`blank-${target}`);
+            element.innerText = word;
+            
+            // Auto move to next blank
+            if(target < 19) {
+                setCurrent(target + 1);
+            }
+        }
+
+        function showResult() {
+            let score = 0;
+            studentAnswers.forEach((ans, index) => {
+                if(ans.toLowerCase().trim() === answers[index].toLowerCase().trim()) {
+                    score += 5;
+                }
+            });
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const name = document.getElementById('name').value;
+            const absen = document.getElementById('absen').value;
+            
+            document.getElementById('student-info-final').innerHTML = `
+                Nama: <strong>${name}</strong><br>
+                Kelas: <strong>6A</strong><br>
+                No. Absen: <strong>${absen}</strong>
+            `;
+            document.getElementById('final-score').innerText = score;
+        }
+
+        // Initialize voice list loading for some browsers
+        window.speechSynthesis.onvoiceschanged = getIndonesianVoice;
+    </script>
+</body>
+</html>

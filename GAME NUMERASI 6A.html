@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Angka Kelas 6A</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #004d40; /* Hijau Tua */
+            --secondary: #00796b;
+            --accent: #ffeb3b; /* Kuning Ceria */
+            --wrong: #ff5252;
+            --correct: #4caf50;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle, #00695c, #00251a);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--white);
+            overflow: hidden;
+        }
+
+        .game-card {
+            background: var(--white);
+            width: 95%;
+            max-width: 500px;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 15px 0px rgba(0,0,0,0.3);
+            text-align: center;
+            position: relative;
+            color: #333;
+        }
+
+        h1 {
+            font-family: 'Fredoka+One', cursive;
+            color: var(--primary);
+            font-size: 28px;
+            margin-top: 0;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+
+        /* Input Styling */
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            font-weight: bold;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+            margin-left: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid #eee;
+            border-radius: 20px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        /* Button Styling */
+        .btn-main {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 22px;
+            font-family: 'Fredoka+One', cursive;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 6px 0px #00251a;
+            transition: 0.1s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #00251a;
+        }
+
+        /* Game Elements */
+        #game-screen, #result-screen { display: none; }
+
+        .timer-badge {
+            background: var(--wrong);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .progress-container {
+            background: #eee;
+            height: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--secondary), var(--correct));
+            height: 100%;
+            width: 0%;
+            transition: 0.5s;
+        }
+
+        .question-text {
+            font-size: 36px;
+            font-family: 'Fredoka+One', cursive;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .opt-btn {
+            background: #f8f9fa;
+            border: 3px solid #eee;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .opt-btn:hover {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        /* Decorations */
+        .decoration {
+            position: absolute;
+            font-size: 40px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        /* Result Screen */
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px;
+            font-family: 'Fredoka+One', cursive;
+            border: 5px solid var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animasi Background -->
+    <div class="decoration" style="top:10%; left:10%;">➕</div>
+    <div class="decoration" style="bottom:10%; right:10%;">➖</div>
+    <div class="decoration" style="top:20%; right:15%;">✖️</div>
+    <div class="decoration" style="bottom:20%; left:15%;">➗</div>
+
+    <div class="game-card" id="login-screen">
+        <h1>🎮 GAME NUMERASI</h1>
+        <p style="margin-top:-10px; font-weight:bold; color:#666;">MI NU HIDAYATUL MUBTADIIN</p>
+        
+        <div class="input-group">
+            <label>Nama Lengkap 👤</label>
+            <input type="text" id="nama" placeholder="Tulis namamu di sini..." onfocus="playGreeting()">
+        </div>
+        
+        <div class="input-group">
+            <label>Kelas 🏫</label>
+            <input type="text" id="kelas" value="6A" readonly style="background: #f0f0f0;">
+        </div>
+        
+        <div class="input-group">
+            <label>Nomor Absen 📝</label>
+            <input type="number" id="absen" placeholder="Contoh: 01">
+        </div>
+
+        <button class="btn-main" onclick="startGame()">MULAI MAIN!</button>
+    </div>
+
+    <div class="game-card" id="game-screen">
+        <div class="timer-badge">⏰ <span id="timer">60:00</span></div>
+        <div class="progress-container">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <p id="q-count" style="font-weight:bold; color:#888;">SOAL 1 DARI 25</p>
+        <div class="question-text" id="question-display">10 + 10</div>
+        <div class="options-grid" id="options-container">
+            <!-- Buttons generated by JS -->
+        </div>
+    </div>
+
+    <div class="game-card" id="result-screen">
+        <h1 style="color: var(--correct);">🎉 ALHAMDULILLAH SELESAI!</h1>
+        <p>Kamu hebat sekali!</p>
+        
+        <div class="score-circle" id="final-score">0</div>
+        
+        <div style="text-align: left; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-bottom: 20px;">
+            <p><strong>Nama:</strong> <span id="res-nama"></span></p>
+            <p><strong>No. Absen:</strong> <span id="res-absen"></span></p>
+            <p><strong>Waktu:</strong> <span id="res-waktu"></span></p>
+        </div>
+
+        <button class="btn-main" onclick="location.reload()">MAIN LAGI 🔄</button>
+    </div>
+
+    <script>
+        let currentQ = 0;
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 3600;
+        let questions = [];
+        let startTime;
+        let hasSpokenGreeting = false;
+
+        const synth = window.speechSynthesis;
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'id-ID';
+            utter.rate = 1.1;
+            const voices = synth.getVoices();
+            const idVoice = voices.find(v => v.lang.includes('id'));
+            if(idVoice) utter.voice = idVoice;
+            synth.speak(utter);
+        }
+
+        function playGreeting() {
+            if (!hasSpokenGreeting) {
+                speak("SELAMAT BERMAIN GAME DI DESAIN OLEH BAPAK MOHAMMAD ARWANI, SARJANA PENDIDIKAN ISLAM, YANG DIDESAIN KHUSUS UNTUK SISWA KELAS 6A M I N U HIDAYATUL MUBTADIIN UNDAAN KIDUL, UNTUK MENGISI LIBURAN SEKOLAH, SEMOGA BERMANFAAT");
+                hasSpokenGreeting = true;
+            }
+        }
+
+        function playSound(type) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if(type === 'correct') {
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gain.gain.fadeOut = 0.2;
+            } else {
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            }
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function generateQuestions() {
+            let qArray = [];
+            for(let i=0; i<25; i++) {
+                const types = ['add', 'sub', 'mul', 'div'];
+                const type = types[Math.floor(Math.random() * 4)];
+                let q, a, ops = [];
+
+                if(type === 'add') {
+                    let n1 = Math.floor(Math.random() * 900) + 100;
+                    let n2 = Math.floor(Math.random() * 90) + 10;
+                    q = `${n1} + ${n2}`; a = n1 + n2;
+                } else if(type === 'sub') {
+                    let n1 = Math.floor(Math.random() * 900) + 100;
+                    let n2 = Math.floor(Math.random() * 90) + 10;
+                    q = `${n1} - ${n2}`; a = n1 - n2;
+                } else if(type === 'mul') {
+                    let n1 = Math.floor(Math.random() * 50) + 2;
+                    let n2 = Math.floor(Math.random() * 9) + 1;
+                    q = `${n1} × ${n2}`; a = n1 * n2;
+                } else {
+                    let n2 = Math.floor(Math.random() * 8) + 2;
+                    let res = Math.floor(Math.random() * 50) + 10;
+                    let n1 = n2 * res;
+                    q = `${n1} : ${n2}`; a = res;
+                }
+
+                ops = [a];
+                while(ops.length < 4) {
+                    let w = a + (Math.floor(Math.random() * 10) - 5);
+                    if(w > 0 && !ops.includes(w)) ops.push(w);
+                }
+                ops.sort(() => Math.random() - 0.5);
+                qArray.push({q, a, ops});
+            }
+            return qArray;
+        }
+
+        function startGame() {
+            if(!document.getElementById('nama').value || !document.getElementById('absen').value) {
+                alert("Isi nama dan absen dulu ya!");
+                return;
+            }
+            questions = generateQuestions();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            startTime = new Date();
+            startTimer();
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if(timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            if(currentQ >= 25) { endGame(); return; }
+            
+            const data = questions[currentQ];
+            document.getElementById('q-count').innerText = `SOAL ${currentQ + 1} DARI 25`;
+            document.getElementById('question-display').innerText = data.q;
+            document.getElementById('progress').style.width = `${(currentQ / 25) * 100}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            data.ops.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(val) {
+            if(val == questions[currentQ].a) {
+                score += 4;
+                playSound('correct');
+                speak("Alhamdulilah benar");
+            } else {
+                playSound('wrong');
+                speak("semangat kamu pasti bisa");
+            }
+            currentQ++;
+            setTimeout(renderQuestion, 600);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            const timeDiff = Math.floor((new Date() - startTime) / 1000);
+            const m = Math.floor(timeDiff / 60);
+            const s = timeDiff % 60;
+
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+
+            document.getElementById('res-nama').innerText = document.getElementById('nama').value;
+            document.getElementById('res-absen').innerText = document.getElementById('absen').value;
+            document.getElementById('res-waktu').innerText = `${m} menit ${s} detik`;
+            document.getElementById('final-score').innerText = score;
+
+            speak("ALHAMDULILLAH SELESAI, KAMU HEBAT");
+        }
+    </script>
+</body>
+</html>

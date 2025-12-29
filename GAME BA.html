@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Urut Kata Arab - MI NU Hidayatul Mubtadiin</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --secondary: #1565c0;
+            --accent: #fbc02d;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #game-box {
+            width: 90%;
+            max-width: 850px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Login */
+        .login-container input {
+            width: 80%;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        /* Header */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #f1f8e9;
+            padding: 12px 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .soal-badge {
+            background: #1565c0;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        /* Area Kata */
+        .pool-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            direction: rtl; 
+            margin: 20px 0;
+        }
+
+        .word-item {
+            padding: 15px 25px;
+            background: white;
+            border: 3px solid;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Amiri', serif;
+            font-size: 28px;
+            transition: 0.2s;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.1);
+            user-select: none;
+        }
+
+        .word-item:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Jawaban */
+        .answer-drop-zone {
+            min-height: 100px;
+            background: #fff9c4;
+            border: 3px dashed #fbc02d;
+            border-radius: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin: 5px;
+        }
+
+        .btn-green { background: #4caf50; color: white; }
+        .btn-blue { background: #2196f3; color: white; }
+        .btn-orange { background: #ff9800; color: white; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        .identity { font-size: 11px; color: #777; margin-top: 25px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <!-- LAYAR 1: LOGIN -->
+    <div id="screen-login">
+        <h1 style="color: var(--primary); margin-bottom:0;">URUT KATA ARAB</h1>
+        <p style="margin-top:5px; color:#555;">MI NU Hidayatul Mubtadiin, Undaan Kidul</p>
+        <img src="https://cdn-icons-png.flaticon.com/512/3406/3406831.png" width="100" style="margin: 15px 0;">
+        
+        <div class="login-container">
+            <input type="text" id="nama" placeholder="Ketik Nama Lengkap..."><br>
+            <input type="text" id="kelas" value="Kelas 6A" readonly><br>
+            <input type="number" id="absen" placeholder="Nomor Absen..."><br><br>
+            <button class="btn btn-green" onclick="initGame()">MULAI BERMAIN</button>
+        </div>
+        <div class="identity">Desain Khusus: Bapak Mohammad Arwani, S.Pd.I</div>
+    </div>
+
+    <!-- LAYAR 2: GAMEPLAY -->
+    <div id="screen-game" class="hidden">
+        <div class="status-bar">
+            <div id="display-nama">Nama: -</div>
+            <div id="display-skor">Skor: 0</div>
+        </div>
+
+        <div class="soal-badge" id="soal-info">Soal 1 dari 20</div>
+        
+        <p style="color: #444; font-weight: 600;">Urutkan kata dari KANAN ke KIRI:</p>
+        
+        <div id="pool-kata" class="pool-area"></div>
+        <div class="answer-drop-zone" id="zone-jawaban"></div>
+
+        <div id="game-actions">
+            <button class="btn btn-orange" onclick="resetJawaban()">ULANGI LAGI</button>
+            <button class="btn btn-blue" id="btn-cek" onclick="cekJawaban()">CEK JAWABAN</button>
+        </div>
+    </div>
+
+    <!-- LAYAR 3: HASIL -->
+    <div id="screen-result" class="hidden">
+        <h2 style="color: var(--secondary);">ALHAMDULILLAH SELESAI!</h2>
+        <div id="result-detail" style="background: #fff; padding: 25px; border-radius: 15px; text-align: left; box-shadow: inset 0 0 10px #ddd;"></div>
+        <br>
+        <button class="btn btn-green" onclick="location.reload()">BERMAIN LAGI</button>
+        <button class="btn btn-blue" onclick="alert('Terima kasih!')">SELESAI</button>
+    </div>
+</div>
+
+<script>
+    const dataSoal = [
+        { q: ["أَنَا", "تِلْمِيْذٌ", "فِي", "الْمَدْرَسَةِ"], a: "أَنَا تِلْمِيْذٌ فِي الْمَدْرَسَةِ" },
+        { q: ["هَذَا", "أَبِي", "هُوَ", "مُدَرِّسٌ"], a: "هَذَا أَبِي هُوَ مُدَرِّسٌ" },
+        { q: ["ذَلِكَ", "الْمَسْجِدُ", "كَبِيْرٌ", "وَجَمِيْلٌ"], a: "ذَلِكَ الْمَسْجِدُ كَبِيْرٌ وَجَمِيْلٌ" },
+        { q: ["نَحْنُ", "نَقْرَأُ", "الْكِتَابَ", "فِي", "الْمَكْتَبَةِ"], a: "نَحْنُ نَقْرَأُ الْكِتَابَ فِي الْمَكْتَبَةِ" },
+        { q: ["يَذْهَبُ", "أَحْمَدُ", "إِلَى", "السُّوْقِ"], a: "يَذْهَبُ أَحْمَدُ إِلَى السُّوْقِ" },
+        { q: ["هَذِهِ", "أُمِّي", "تَطْبُخُ", "فِي", "الْمَطْبَخِ"], a: "هَذِهِ أُمِّي تَطْبُخُ فِي الْمَطْبَخِ" },
+        { q: ["أُصَلِّي", "الصُّبْحَ", "فِي", "الْمَسْجِدِ"], a: "أُصَلِّي الصُّبْحَ فِي الْمَسْجِدِ" },
+        { q: ["الْفَصْلُ", "نَظِيْفٌ", "وَمُرَتَّبٌ"], a: "الْفَصْلُ نَظِيْفٌ وَمُرَتَّبٌ" },
+        { q: ["فِي", "الْحَدِيْقَةِ", "أَزْهَارٌ", "مُتَنَوِّعَةٌ"], a: "فِي الْحَدِيْقَةِ أَزْهَارٌ مُتَنَوِّعَةٌ" },
+        { q: ["يَكْتُبُ", "الطَّالِبُ", "الدَّرْسَ", "عَلَى", "السَّبُّوْرَةِ"], a: "يَكْتُبُ الطَّALِبُ الدَّرْسَ عَلَى السَّبُّوْرَةِ" },
+        { q: ["أَنَا", "أُحِبُّ", "اللُّغَةَ", "الْعَرَبِيَّةَ"], a: "أَنَا أُحِبُّ اللُّغَةَ الْعَرَبِيَّةَ" },
+        { q: ["الْكُرَةُ", "تَحْتَ", "الْمَكْتَبِ"], a: "الْكُرَةُ تَحْتَ الْمَكْتَبِ" },
+        { q: ["تِلْكَ", "مِحْفَظَةٌ", "جَدِيْدَةٌ"], a: "تِلْكَ مِحْفَظَةٌ جَدِيْدَةٌ" },
+        { q: ["أَرْجِعُ", "مِنَ", "الْمَدْرَسَةِ", "نَهَارًا"], a: "أَرْجِعُ مِنَ الْمَدْرَسَةِ نَهَارًا" },
+        { q: ["فِي", "الْمَقْصَفِ", "طَعَامٌ", "وَشَرَابٌ"], a: "فِي الْمَقْصَفِ طَعَامٌ وَشَرَابٌ" },
+        { q: ["مَنْ", "هُوَ؟", "هُوَ", "طَبِيْبٌ", "مَاهِرٌ"], a: "مَنْ هُوَ؟ هُوَ طَبِيْبٌ مَاهِرٌ" },
+        { q: ["أَيْنَ", "تَسْكُنُ؟", "أَسْكُنُ", "فِي", "الْقَرْيَةِ"], a: "أَيْنَ تَسْكُنُ؟ أَسْكُنُ فِي الْقَرْيَةِ" },
+        { q: ["يَلْعَبُ", "الْوَلَدُ", "فِي", "الْمَلْعَبِ"], a: "يَلْعَبُ الْوَلَدُ فِي الْمَلْعَبِ" },
+        { q: ["عِنْدِي", "قَلَمٌ", "وَكِتَابٌ"], a: "عِنْدِي قَلَمٌ وَكِتَابٌ" },
+        { q: ["مَا", "هَذَا؟", "هَذَا", "قَمِيْصٌ", "نَظِيْفٌ"], a: "مَا هَذَا؟ هَذَا قَمِيْصٌ نَظِيْفٌ" }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let selectedWords = [];
+    let studentData = { nama: "", absen: "", start: null };
+    const colors = ['#ffcdd2', '#bbdefb', '#c8e6c9', '#fff9c4', '#f3e5f5', '#e0f7fa'];
+
+    // SISTEM SUARA (ENHANCED)
+    let voices = [];
+    function loadVoices() {
+        voices = window.speechSynthesis.getVoices();
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function bicara(teks, tipe) {
+        const msg = new SpeechSynthesisUtterance(teks);
+        
+        if (tipe === 'indo') {
+            msg.lang = 'id-ID';
+            msg.rate = 1;
+            // Cari suara perempuan Indonesia
+            const v = voices.find(v => v.lang.includes('ID') && v.name.includes('Female'));
+            if (v) msg.voice = v;
+        } else if (tipe === 'arab') {
+            msg.lang = 'ar-SA';
+            msg.rate = 0.6; // Diperlambat sesuai permintaan
+            // Cari suara Arab (Saudi diutamakan)
+            const v = voices.find(v => v.lang.includes('ar-SA')) || voices.find(v => v.lang.includes('ar'));
+            if (v) msg.voice = v;
+        }
+        
+        window.speechSynthesis.speak(msg);
+    }
+
+    function initGame() {
+        const n = document.getElementById('nama').value;
+        const a = document.getElementById('absen').value;
+        if(!n || !a) return alert("Isi nama dan absen dulu!");
+
+        studentData.nama = n;
+        studentData.absen = a;
+        studentData.start = new Date();
+
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('screen-game').classList.remove('hidden');
+        document.getElementById('display-nama').innerText = "Nama: " + n;
+
+        // Intro
+        bicara("SELAMAT BERMAIN URUT KATA ARAB, DI DESAIN OLEH BAPAK MOHAMMAD ARWANI, SARJANA PENDIDIKAN ISLAM, YANG DIDESAIN KHUSUS UNTUK SISWA KELAS Enam A, MI NU HIDAYATUL MUBTADIIN, UNDAAN KIDUL, UNTUK MENGISI LIBURAN SEKOLAH, SEMOGA BERMANFAAT", "indo");
+
+        setTimeout(() => {
+            bicara("Tolong urutkan kata-kata berikut ini dari kanan ke kiri sehingga membentuk kalimat yang benar", "indo");
+        }, 13000);
+
+        loadSoal();
+    }
+
+    function loadSoal() {
+        if (currentIdx >= dataSoal.length) return tamat();
+        
+        selectedWords = [];
+        document.getElementById('zone-jawaban').innerHTML = "";
+        document.getElementById('soal-info').innerText = `Soal ${currentIdx + 1} dari 20`;
+        document.getElementById('btn-cek').disabled = false;
+
+        const pool = document.getElementById('pool-kata');
+        pool.innerHTML = "";
+        let shuffled = [...dataSoal[currentIdx].q].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach((w, i) => {
+            const d = document.createElement('div');
+            d.className = 'word-item';
+            d.innerText = w;
+            d.style.borderColor = colors[i % colors.length];
+            d.onclick = () => {
+                selectedWords.push(w);
+                d.style.display = 'none';
+                const b = document.createElement('div');
+                b.className = 'word-item';
+                b.innerText = w;
+                b.style.backgroundColor = d.style.borderColor;
+                document.getElementById('zone-jawaban').appendChild(b);
+            };
+            pool.appendChild(d);
+        });
+    }
+
+    function resetJawaban() {
+        selectedWords = [];
+        document.getElementById('zone-jawaban').innerHTML = "";
+        document.querySelectorAll('#pool-kata .word-item').forEach(i => i.style.display = 'block');
+    }
+
+    function cekJawaban() {
+        const userAns = selectedWords.join(" ");
+        const correctAns = dataSoal[currentIdx].a;
+        document.getElementById('btn-cek').disabled = true;
+
+        if (userAns === correctAns) {
+            score += 5;
+            document.getElementById('display-skor').innerText = "Skor: " + score;
+            bicara("Jawaban Kamu Benar", "indo");
+        } else {
+            bicara("Maaf Kurang tepat", "indo");
+        }
+
+        // KOREKSI SUARA ARAB SAUDI (MUNCUL SETELAH 3 DETIK)
+        setTimeout(() => {
+            console.log("Memainkan koreksi Arab: " + correctAns);
+            bicara(correctAns, "arab");
+
+            // Pindah soal setelah suara arab selesai (estimasi 4 detik)
+            setTimeout(() => {
+                currentIdx++;
+                loadSoal();
+            }, 4000);
+        }, 3000);
+    }
+
+    function tamat() {
+        document.getElementById('screen-game').classList.add('hidden');
+        document.getElementById('screen-result').classList.remove('hidden');
+
+        const durasi = Math.floor((new Date() - studentData.start) / 1000);
+        const m = Math.floor(durasi / 60);
+        const s = durasi % 60;
+
+        document.getElementById('result-detail').innerHTML = `
+            <p><strong>Nama:</strong> ${studentData.nama}</p>
+            <p><strong>No. Absen:</strong> ${studentData.absen}</p>
+            <p><strong>Waktu:</strong> ${m} menit ${s} detik</p>
+            <h1 style="text-align:center; color:var(--secondary)">SKOR: ${score}</h1>
+        `;
+
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        
+        setTimeout(() => {
+            bicara("Kamu anak hebat. Apakah mau bermain game lagi?", "indo");
+        }, 1500);
+    }
+</script>
+
+</body>
+</html>

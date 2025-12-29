@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Pengetahuan Umum Kelas 6A</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-green: #143601;
+            --mid-green: #1a4301;
+            --leaf-green: #245501;
+            --light-green: #538d22;
+            --accent: #aad603;
+            --white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: radial-gradient(circle, var(--mid-green), var(--dark-green));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--white);
+            overflow: hidden;
+        }
+
+        #game-box {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { font-family: 'Fredoka One', cursive; font-size: 2.5rem; color: var(--accent); text-shadow: 3px 3px 0px #000; margin-bottom: 5px; }
+        .author { font-size: 0.8rem; margin-bottom: 25px; letter-spacing: 1px; opacity: 0.8; }
+
+        /* Form Styling */
+        .card-3d {
+            background: var(--white);
+            color: var(--dark-green);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 0 #0a1f01;
+            margin-bottom: 20px;
+        }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-weight: 900; margin-bottom: 5px; color: var(--mid-green); }
+        input {
+            width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd;
+            font-size: 16px; font-family: inherit; font-weight: 700;
+        }
+
+        /* Quiz UI */
+        #timer { font-size: 1.5rem; font-weight: 900; color: #ff4444; background: white; display: inline-block; padding: 5px 20px; border-radius: 50px; margin-bottom: 15px; border: 3px solid var(--dark-green); }
+        .question-text { font-size: 1.3rem; font-weight: 800; margin: 20px 0; min-height: 60px; line-height: 1.4; }
+        
+        .options-container { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 25px; }
+        
+        .option {
+            background: #f0f0f0; padding: 15px 20px; border-radius: 15px; cursor: pointer;
+            display: flex; align-items: center; transition: 0.2s;
+            border: 2px solid transparent; font-weight: 700; text-align: left; color: #333;
+        }
+        .option:hover { background: #e0e0e0; transform: translateY(-2px); }
+        .option.selected { border-color: var(--light-green); background: #e8f5e9; box-shadow: 0 5px 0 var(--light-green); }
+        .option.correct { background: #4caf50 !important; color: white !important; }
+        .option.wrong { background: #f44336 !important; color: white !important; }
+
+        .circle { min-width: 24px; height: 24px; border: 3px solid var(--light-green); border-radius: 50%; margin-right: 15px; position: relative; }
+        .selected .circle::after { content: ''; width: 12px; height: 12px; background: var(--light-green); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer;
+            font-family: 'Fredoka One', cursive; font-size: 1.2rem; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-mulai { background: var(--accent); color: var(--dark-green); box-shadow: 0 6px 0 #7a9a02; }
+        .btn-mulai:active { transform: translateY(4px); box-shadow: 0 2px 0 #7a9a02; }
+        
+        .btn-lanjut { background: #ff9800; color: white; box-shadow: 0 6px 0 #e65100; margin-top: 10px; }
+        .btn-lanjut:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* Result Area */
+        #setup-screen, #quiz-screen, #result-screen { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="game-box">
+        <!-- SCREEN 1: SETUP -->
+        <div id="setup-screen" style="display: block;">
+            <h1>EDUGAME 6A</h1>
+            <p class="author">Didesain oleh: Bapak Mohammad Arwani, S.Pd.I</p>
+            <div class="card-3d">
+                <div class="input-group">
+                    <label>Nama Peserta Didik:</label>
+                    <input type="text" id="player-name" placeholder="Ketik namamu...">
+                </div>
+                <div class="input-group">
+                    <label>Nomor Absen:</label>
+                    <input type="number" id="player-absen" placeholder="Contoh: 12">
+                </div>
+                <div class="input-group">
+                    <label>Kelas:</label>
+                    <input type="text" value="6A" readonly>
+                </div>
+                <button class="btn btn-mulai" onclick="initGame()">MULAI</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: QUIZ -->
+        <div id="quiz-screen">
+            <div id="timer">90:00</div>
+            <div class="card-3d">
+                <p id="q-number" style="font-weight: 900; color: var(--light-green);">SOAL 1/50</p>
+                <div class="question-text" id="q-text">Pertanyaan akan muncul di sini?</div>
+                <div class="options-container" id="options-box"></div>
+            </div>
+            <button class="btn btn-lanjut" id="btn-action" onclick="processStep()" disabled>LANJUT</button>
+        </div>
+
+        <!-- SCREEN 3: RESULT -->
+        <div id="result-screen">
+            <h1>ALHAMDULILLAH SELESAI, KAMU HEBAT!</h1>
+            <div class="card-3d" style="text-align: left;">
+                <p>Nama: <strong id="res-name"></strong></p>
+                <p>Absen: <strong id="res-absen"></strong></p>
+                <p>Waktu: <strong id="res-time"></strong></p>
+                <hr style="margin: 15px 0;">
+                <h2 style="text-align: center;">SKOR AKHIR: <span id="res-score" style="color: var(--light-green); font-size: 3rem;">0</span></h2>
+            </div>
+            <button class="btn btn-mulai" onclick="location.reload()">MAIN LAGI</button>
+            <button class="btn" style="background: #f44336; box-shadow: 0 6px 0 #b71c1c; color: white;" onclick="window.close()">TUTUP</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {q: "Negara manakah yang dijuluki sebagai 'Negara Tirai Bambu'?", a: "Jepang", b: "Korea Selatan", c: "China", d: "Thailand", ans: "C"},
+            {q: "Apa nama ibu kota dari negara Australia?", a: "Sydney", b: "Canberra", c: "Melbourne", d: "Perth", ans: "B"},
+            {q: "Benua terkecil di dunia adalah...", a: "Asia", b: "Afrika", c: "Australia", d: "Eropa", ans: "C"},
+            {q: "Menara Pisa terletak di negara...", a: "Prancis", b: "Jerman", c: "Italia", d: "Spanyol", ans: "C"},
+            {q: "Negara Asia Tenggara yang tidak pernah dijajah adalah...", a: "Vietnam", b: "Thailand", c: "Filipina", d: "Malaysia", ans: "B"},
+            {q: "Sungai terpanjang di dunia adalah...", a: "Amazon", b: "Nil", c: "Mekong", d: "Mississippi", ans: "B"},
+            {q: "Negara dengan penduduk terbanyak saat ini adalah...", a: "China", b: "Amerika Serikat", c: "India", d: "Indonesia", ans: "C"},
+            {q: "Mata uang negara Jepang adalah...", a: "Won", b: "Ringgit", c: "Yen", d: "Peso", ans: "C"},
+            {q: "Gunung tertinggi di dunia adalah Gunung...", a: "Andes", b: "Alpen", c: "Himalaya", d: "Jayawijaya", ans: "C"},
+            {q: "Negara 'Gajah Putih' adalah...", a: "Laos", b: "Thailand", c: "Kamboja", d: "Myanmar", ans: "B"},
+            {q: "Tari Kecak dan Tari Pendet berasal dari...", a: "Jawa Timur", b: "Bali", c: "NTB", d: "Sulawesi Selatan", ans: "B"},
+            {q: "Tari Saman berasal dari...", a: "Papua", b: "Aceh", c: "Maluku", d: "Sumatera Barat", ans: "B"},
+            {q: "Rumah adat 'Tongkonan' milik suku...", a: "Batak", b: "Minangkabau", c: "Toraja", d: "Dayak", ans: "C"},
+            {q: "Alat musik Angklung berasal dari...", a: "Jawa Barat", b: "Jawa Tengah", c: "Banten", d: "Madura", ans: "A"},
+            {q: "Gudeg berasal dari kota...", a: "Solo", b: "Semarang", c: "Yogyakarta", d: "Bandung", ans: "C"},
+            {q: "Tari Piring berasal dari...", a: "Sumatera Utara", b: "Sumatera Barat", c: "Jambi", d: "Bengkulu", ans: "B"},
+            {q: "Lagu 'Apuse' berasal dari...", a: "NTT", b: "Maluku", c: "Papua", d: "Sulawesi Utara", ans: "C"},
+            {q: "Senjata Kujang berasal dari...", a: "Jawa Barat", b: "Jawa Tengah", c: "Rencong", d: "Mandau", ans: "A"},
+            {q: "Hari Batik Nasional diperingati setiap...", a: "17 Agustus", b: "21 April", c: "2 Oktober", d: "10 November", ans: "C"},
+            {q: "Suku pelaut ulung dari Sulawesi Selatan adalah...", a: "Suku Bugis", b: "Suku Minahasa", c: "Suku Dani", d: "Suku Baduy", ans: "A"},
+            {q: "Bapak Pendidikan Nasional adalah...", a: "Soekarno", b: "Ki Hajar Dewantara", c: "Hatta", d: "Ahmad Dahlan", ans: "B"},
+            {q: "Presiden pertama Indonesia adalah...", a: "Soeharto", b: "B.J. Habibie", c: "Ir. Soekarno", d: "Gus Dur", ans: "C"},
+            {q: "Pencipta lagu Indonesia Raya adalah...", a: "Ibu Sud", b: "W.R. Supratman", c: "C. Simanjuntak", d: "Ismail Marzuki", ans: "B"},
+            {q: "Tokoh emansipasi wanita adalah...", a: "Cut Nyak Dien", b: "R.A. Kartini", c: "Martha Christina", d: "Dewi Sartika", ans: "B"},
+            {q: "Penemu lampu pijar adalah...", a: "Newton", b: "Einstein", c: "Thomas Alva Edison", d: "Bell", ans: "C"},
+            {q: "Bapak Koperasi Indonesia adalah...", a: "Pembangunan", b: "Mohammad Hatta", c: "Pendidikan", d: "Kelautan", ans: "B"},
+            {q: "Kerajaan Hindu tertua di Indonesia adalah...", a: "Majapahit", b: "Tarumanegara", c: "Kutai", d: "Sriwijaya", ans: "C"},
+            {q: "Penjahit bendera Merah Putih adalah...", a: "Sayuti Melik", b: "Fatmawati", c: "Sukarni", d: "Moh. Yamin", ans: "B"},
+            {q: "Sumpah Pemuda terjadi pada tanggal...", a: "20 Mei", b: "28 Oktober 1928", c: "17 Agustus", d: "10 November", ans: "B"},
+            {q: "Laksamana Maeda membantu perumusan...", a: "Melawan Belanda", b: "Teks Proklamasi", c: "Budi Utomo", d: "Mengetik", ans: "B"},
+            {q: "Kerja sama Asia Tenggara disebut...", a: "PBB", b: "NATO", c: "ASEAN", d: "APEC", ans: "C"},
+            {q: "Lambang negara Indonesia adalah...", a: "Bendera", b: "Burung Garuda", c: "Pohon", d: "Padi", ans: "B"},
+            {q: "Lembaga Yudikatif bertugas...", a: "Legislatif", b: "Eksekutif", c: "Peradilan", d: "Federatif", ans: "C"},
+            {q: "Sila ketiga Pancasila berbunyi...", a: "Ketuhanan", b: "Keadilan", c: "Persatuan Indonesia", d: "Kemanusiaan", ans: "C"},
+            {q: "Dasar negara Indonesia adalah...", a: "UUD", b: "Pancasila", c: "Bhinneka", d: "Proklamasi", ans: "B"},
+            {q: "ASEAN didirikan di kota...", a: "Jakarta", b: "Kuala Lumpur", c: "Bangkok", d: "Manila", ans: "C"},
+            {q: "Jumlah provinsi di Indonesia saat ini...", a: "34", b: "36", c: "38", d: "40", ans: "C"},
+            {q: "Hak memilih dimulai usia...", a: "15", b: "17", c: "18", d: "21", ans: "B"},
+            {q: "Lagu 'Bagimu Negeri' diciptakan oleh...", a: "Kusbini", b: "L. Manik", c: "Simanjuntak", d: "H. Mutahar", ans: "A"},
+            {q: "Kepala daerah provinsi adalah...", a: "Wali Kota", b: "Bupati", c: "Gubernur", d: "Camat", ans: "C"},
+            {q: "Planet Merah adalah...", a: "Venus", b: "Mars", c: "Jupiter", d: "Saturnus", ans: "B"},
+            {q: "Zat hijau daun disebut...", a: "Stomata", b: "Klorofil", c: "Kambium", d: "Akar", ans: "B"},
+            {q: "Hewan hidup di dua alam adalah...", a: "Mamalia", b: "Reptilia", c: "Amfibi", d: "Primata", ans: "C"},
+            {q: "Gas untuk bernapas adalah...", a: "CO2", b: "Nitrogen", c: "Oksigen", d: "Hidrogen", ans: "C"},
+            {q: "Penemu pesawat terbang adalah...", a: "James Watt", b: "Wright Bersaudara", c: "Galileo", d: "Faraday", ans: "B"},
+            {q: "Samudra terluas adalah...", a: "Hindia", b: "Atlantik", c: "Pasifik", d: "Arktik", ans: "C"},
+            {q: "Alat ukur gempa adalah...", a: "Termometer", b: "Barometer", c: "Seismograf", d: "Anemometer", ans: "C"},
+            {q: "Lama bumi berotasi...", a: "12 jam", b: "24 jam", c: "30 hari", d: "365 hari", ans: "B"},
+            {q: "Vitamin untuk mata adalah...", a: "Vitamin A", b: "Vitamin B", c: "Vitamin C", d: "Vitamin D", ans: "A"},
+            {q: "Lapisan udara bumi adalah...", a: "Hidrosfer", b: "Atmosfer", c: "Litosfer", d: "Biosfer", ans: "B"}
+        ];
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let pName = "";
+        let pAbsen = "";
+        let timerSeconds = 5400;
+        let timerInterval;
+        let selectedChoice = null;
+        let isEvaluated = false;
+
+        // Inisialisasi Suara
+        let synth = window.speechSynthesis;
+        let voices = [];
+
+        function loadVoices() {
+            voices = synth.getVoices();
+        }
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            let utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'id-ID';
+            let femaleVoice = voices.find(v => v.lang.includes('id') && (v.name.includes('Indonesian') || v.name.includes('Google')));
+            if (femaleVoice) utter.voice = femaleVoice;
+            utter.rate = 1.0;
+            synth.speak(utter);
+        }
+
+        function initGame() {
+            pName = document.getElementById('player-name').value;
+            pAbsen = document.getElementById('player-absen').value;
+
+            if (!pName || !pAbsen) {
+                alert("Isi nama dan absen dulu ya!");
+                return;
+            }
+
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+
+            speak("SELAMAT BERMAIN GAME DI DESAIN OLEH BAPAK MOHAMMAD ARWANI, SARJANA PENDIDIKAN ISLAM, YANG DIDESAIN KHUSUS UNTUK SISWA KELAS 6A MI NU HIDAYATUL MUBTADIIN UNDAAN KIDUL, UNTUK MENGISI LIBURAN SEKOLAH, SEMOGA BERMANFAAT");
+
+            questions = [...quizData].sort(() => Math.random() - 0.5);
+            startTimer();
+            renderQuestion();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                let m = Math.floor(timerSeconds / 60);
+                let s = timerSeconds % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timerSeconds <= 0) endGame();
+            }, 1000);
+        }
+
+        function renderQuestion() {
+            isEvaluated = false;
+            selectedChoice = null;
+            document.getElementById('btn-action').innerText = "LANJUT";
+            document.getElementById('btn-action').disabled = true;
+
+            const q = questions[currentIdx];
+            document.getElementById('q-number').innerText = `SOAL ${currentIdx + 1}/50`;
+            document.getElementById('q-text').innerText = q.q;
+
+            const box = document.getElementById('options-box');
+            box.innerHTML = '';
+
+            ['A', 'B', 'C', 'D'].forEach(letter => {
+                const opt = document.createElement('div');
+                opt.className = 'option';
+                opt.id = 'opt-' + letter;
+                opt.innerHTML = `<div class="circle"></div> ${letter}. ${q[letter.toLowerCase()]}`;
+                opt.onclick = () => selectOption(letter);
+                box.appendChild(opt);
+            });
+        }
+
+        function selectOption(letter) {
+            if (isEvaluated) return;
+            
+            selectedChoice = letter;
+            document.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+            document.getElementById('opt-' + letter).classList.add('selected');
+            document.getElementById('btn-action').disabled = false;
+        }
+
+        function processStep() {
+            if (!isEvaluated) {
+                // Tahap Evaluasi
+                evaluateAnswer();
+            } else {
+                // Tahap Pindah Soal
+                currentIdx++;
+                if (currentIdx < questions.length) {
+                    renderQuestion();
+                } else {
+                    endGame();
+                }
+            }
+        }
+
+        function evaluateAnswer() {
+            isEvaluated = true;
+            const q = questions[currentIdx];
+            const correctLetter = q.ans;
+
+            document.querySelectorAll('.option').forEach(el => {
+                el.style.cursor = 'default';
+                const letter = el.id.split('-')[1];
+                if (letter === correctLetter) {
+                    el.classList.add('correct');
+                } else if (letter === selectedChoice) {
+                    el.classList.add('wrong');
+                }
+            });
+
+            if (selectedChoice === correctLetter) {
+                score += 2;
+                speak(`Alhamdulilah benar ${pName}`);
+            } else {
+                speak(`semangat ya! ${pName}`);
+            }
+
+            document.getElementById('btn-action').innerText = "SOAL BERIKUTNYA";
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            speak("ALHAMDULILLAH SELESAI, KAMU HEBAT");
+            
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+
+            document.getElementById('res-name').innerText = pName;
+            document.getElementById('res-absen').innerText = pAbsen;
+            document.getElementById('res-score').innerText = score;
+
+            const used = 5400 - timerSeconds;
+            const m = Math.floor(used / 60);
+            const s = used % 60;
+            document.getElementById('res-time').innerText = `${m} menit ${s} detik`;
+        }
+    </script>
+</body>
+</html>
